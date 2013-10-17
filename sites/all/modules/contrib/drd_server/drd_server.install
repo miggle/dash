@@ -1,0 +1,223 @@
+<?php
+
+function drd_server_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    $requirements['drd_server.api'] = array(
+      'title' => $t('DRD API Version'),
+      'value' => DRD_SERVER_API_VERSION,
+      'severity' => REQUIREMENT_INFO
+    );
+
+    $info = Database::getConnectionInfo();
+    $requirements['drd_server.database'] = array(
+      'title' => $t('Database setup'),
+      'value' => '<table>' .
+        '<tr><td>' . $t('Driver') . '</td><td>' . $info['default']['driver'] . '</td></tr>' .
+        '<tr><td>' . $t('Host') . '</td><td>' . $info['default']['host'] . '</td></tr>' .
+        '<tr><td>' . $t('Port') . '</td><td>' . $info['default']['port'] . '</td></tr>' .
+        '<tr><td>' . $t('Database') . '</td><td>' . $info['default']['database'] . '</td></tr>' .
+        '<tr><td>' . $t('Prefix') . '</td><td>' . $info['default']['prefix']['default'] . '</td></tr>' .
+        '</table>',
+      'severity' => REQUIREMENT_INFO
+    );
+
+    global $conf;
+    $https = !empty($conf['https']);
+    $requirements['drd_server.ssl'] = array(
+      'title' => $t('Site uses SSL'),
+      'value' => $https ? $t('Yes') : $t('No'),
+      'severity' => $https ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $securepages = module_exists('securepages');
+    $requirements['drd_server.securepages'] = array(
+      'title' => $t('Secure pages module installed'),
+      'value' => $securepages ? $t('Yes') : $t('No'),
+      'severity' => $securepages ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $analytics = (module_exists('googleanalytics') || module_exists('piwik'));
+    $requirements['drd_server.module.analytics'] = array(
+      'title' => $t('Analytics module installed'),
+      'value' => $analytics ? $t('Yes') : $t('No'),
+      'severity' => $analytics ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $devel = !module_exists('devel');
+    $requirements['drd_server.module.devel'] = array(
+      'title' => $t('Devel module disabled'),
+      'value' => $devel ? $t('Yes') : $t('No'),
+      'severity' => $devel ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $redirect = module_exists('redirect');
+    $requirements['drd_server.module.redirect'] = array(
+      'title' => $t('Module Redirect installed'),
+      'value' => $redirect ? $t('Yes') : $t('No'),
+      'severity' => $redirect ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $metatag = module_exists('metatag');
+    $requirements['drd_server.module.metatag'] = array(
+      'title' => $t('Module MetaTag installed'),
+      'value' => $metatag ? $t('Yes') : $t('No'),
+      'severity' => $metatag ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $mollom = module_exists('mollom');
+    $requirements['drd_server.module.mollom'] = array(
+      'title' => $t('Module Mollom installed'),
+      'value' => $mollom ? $t('Yes') : $t('No'),
+      'severity' => $mollom ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $pagetitle = module_exists('page_title');
+    $requirements['drd_server.module.pagetitle'] = array(
+      'title' => $t('Module Page Title installed'),
+      'value' => $pagetitle ? $t('Yes') : $t('No'),
+      'severity' => $pagetitle ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $pathauto = module_exists('pathauto');
+    $requirements['drd_server.module.pathauto'] = array(
+      'title' => $t('Module PathAuto installed'),
+      'value' => $pathauto ? $t('Yes') : $t('No'),
+      'severity' => $pathauto ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $php = !module_exists('php');
+    $requirements['drd_server.module.php'] = array(
+      'title' => $t('Module PHP Filter disabled'),
+      'value' => $php ? $t('Yes') : $t('No'),
+      'severity' => $php ? REQUIREMENT_OK: REQUIREMENT_ERROR,
+    );
+    $xmlsitemap = module_exists('xmlsitemap');
+    $requirements['drd_server.module.xmlsitemap'] = array(
+      'title' => $t('Module XML-Sitemap installed'),
+      'value' => $xmlsitemap ? $t('Yes') : $t('No'),
+      'severity' => $xmlsitemap ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $user1 = user_load(1);
+    $user1_ok = !in_array(strtolower($user1->name), array('admin', 'root'));
+    $requirements['drd_server.user1'] = array(
+      'title' => $t('Name of user 1'),
+      'value' => $user1_ok ? $t('Good') : $t('Too obvious'),
+      'severity' => $user1_ok ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $admin_role = variable_get('user_admin_role', 0);
+    $count_admin = db_select('users_roles', 'ur')
+      ->condition('ur.rid', $admin_role)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $requirements['drd_server.admincount'] = array(
+      'title' => $t('Number of admins'),
+      'value' => ($count_admin <= 3) ? $t('Good (!count)', array('!count' => $count_admin)) : $t('Too many (!count)', array('!count' => $count_admin)),
+      'severity' => ($count_admin <= 3) ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $css = variable_get('preprocess_css', 0);
+    $requirements['drd_server.compress.css'] = array(
+      'title' => $t('Aggregate and compress CSS files'),
+      'value' => $css ? $t('Yes') : $t('No'),
+      'severity' => $css ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $js = variable_get('preprocess_js', 0);
+    $requirements['drd_server.compress.js'] = array(
+      'title' => $t('Aggregate JavaScript files'),
+      'value' => $js ? $t('Yes') : $t('No'),
+      'severity' => $js ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $page = variable_get('page_compression', 0);
+    $requirements['drd_server.compress.page'] = array(
+      'title' => $t('Compress cached pages'),
+      'value' => $page ? $t('Yes') : $t('No'),
+      'severity' => $page ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $page403 = variable_get('site_403', '');
+    $requirements['drd_server.defined.403'] = array(
+      'title' => $t('Default 403 (access denied) page'),
+      'value' => empty($page403) ? $t('Undefined') : $page403,
+      'severity' => empty($page403) ? REQUIREMENT_WARNING: REQUIREMENT_OK,
+    );
+    $page404 = variable_get('site_404', '');
+    $requirements['drd_server.defined.404'] = array(
+      'title' => $t('Default 404 (not found) page'),
+      'value' => empty($page404) ? $t('Undefined') : $page404,
+      'severity' => empty($page404) ? REQUIREMENT_WARNING: REQUIREMENT_OK,
+    );
+    $cache = variable_get('cache', 0);
+    $requirements['drd_server.enable.cache'] = array(
+      'title' => $t('Cache pages for anonymous users'),
+      'value' => $cache ? $t('Yes') : t('No'),
+      'severity' => $cache ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $clean_url = variable_get('clean_url', 0);
+    $requirements['drd_server.enable.cleanurl'] = array(
+      'title' => $t('Enable clean URLs'),
+      'value' => $clean_url ? $t('Yes') : t('No'),
+      'severity' => $clean_url ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $favicon = theme_get_setting('default_favicon', variable_get('theme_default', 'bartik'));
+    $requirements['drd_server.favicon'] = array(
+      'title' => $t('Default favicon used'),
+      'value' => $favicon ? $t('Yes') : t('No'),
+      'severity' => $favicon ? REQUIREMENT_WARNING: REQUIREMENT_OK,
+    );
+    $warnings = variable_get('error_level', ERROR_REPORTING_DISPLAY_ALL);
+    $requirements['drd_server.hidden.warnings'] = array(
+      'title' => $t('Error messages to display'),
+    );
+    switch ($warnings) {
+      case ERROR_REPORTING_HIDE:
+        $requirements['drd_server.hidden.warnings']['value'] = t('None');
+        $requirements['drd_server.hidden.warnings']['severity'] = REQUIREMENT_OK;
+        break;
+
+      case ERROR_REPORTING_DISPLAY_SOME:
+        $requirements['drd_server.hidden.warnings']['value'] = t('Errors and warnings');
+        $requirements['drd_server.hidden.warnings']['severity'] = REQUIREMENT_WARNING;
+        break;
+
+      default:
+        $requirements['drd_server.hidden.warnings']['value'] = t('All messages');
+        $requirements['drd_server.hidden.warnings']['severity'] = REQUIREMENT_ERROR;
+    }
+    $txtfiles = array();
+    $files_to_remove = array(
+      'CHANGELOG.txt',
+      'COPYRIGHT.txt',
+      'INSTALL.mysql.txt',
+      'INSTALL.pgsql.txt',
+      'INSTALL.txt',
+      'LICENSE.txt',
+      'MAINTAINERS.txt',
+      'README.txt',
+      'UPGRADE.txt'
+    );
+    foreach ($files_to_remove as $file) {
+      if (file_exists(DRUPAL_ROOT . '/' . $file))
+        $txtfiles[] = $file;
+    }
+    $requirements['drd_server.removed.txtfiles'] = array(
+      'title' => $t('Info files to be removed'),
+      'value' => empty($txtfiles) ? $t('All info files properly removed') : implode(', ', $txtfiles),
+      'severity' => empty($txtfiles) ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $robotsurl = url('robots.txt', array('absolute' => TRUE));
+    $request = drupal_http_request($robotsurl, array('max_redirects' => 0, 'timeout' => 2, ));
+    $robots = isset($request->code) && ($request->code == 200);
+    $requirements['drd_server.robots.txt'] = array(
+      'title' => $t('File robots.txt is available'),
+      'value' => $robots ? $t('Yes') : $t('No'),
+      'severity' => $robots ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+    $themeregistry = variable_get('devel_rebuild_theme_registry', FALSE);
+    $requirements['drd_server.theme.registry'] = array(
+      'title' => $t('Reset theme registry for each page'),
+      'value' => $themeregistry ? $t('Yes') : $t('No'),
+      'severity' => $themeregistry ? REQUIREMENT_WARNING: REQUIREMENT_OK,
+    );
+    $watchdog = variable_get('dblog_row_limit', 1000);
+    $requirements['drd_server.trim.watchdog'] = array(
+      'title' => $t('Database log messages to keep'),
+      'value' => empty($watchdog) ? t('All') : $watchdog,
+      'severity' => ($watchdog <= 1000 && $watchdog > 0) ? REQUIREMENT_OK: REQUIREMENT_WARNING,
+    );
+  }
+
+  return $requirements;
+}

@@ -1,0 +1,68 @@
+drd_server 7.x-2.1, 2012-08-23
+------------------------------
+NEW: Implement more requirements and categorize them to be properly displayed on the domain overliew list
+NEW #1534424: Implement a modules overview at admin/drd/modules to show modules stati for all modules across all cores and domains
+NEW: New operation to execute arbitrary PHP code at the remote domain
+NEW #1391314: Implement support for blocks so that each remote domain can deliver any block for the domain detail page on the dashboard
+NEW: Implement hook_requirements to deliver some more information back to the dashboard
+NEW #1499208: Change (simplify) the way how "Update domain info" delivers the collected information back to the dashboard
+FIX #1735024: Allow checking for drd_server being installed even if there is no permission set for anonymous users
+FIX: Flush page cache when changing maintenance mode
+FIX: Restore previous maintenance mode after db updates
+FIX #1727948: Avoid PDOException if a table (e.g. comments) doesn't exist and return zero instead
+
+drd_server 7.x-2.0, 2012-04-03
+------------------------------
+NEW #1505140 by @j.slemmer: Include the config link into the info file for quick access on the modules page
+NEW: Provide a new hook_drd_server_update_translation() to allow other modules to perform extra tasks when updating translations
+REFACTOR: Improve code and comments to match with Durpal Coding Standards
+REFACTOR #1504006 by @j.slemmer: Move Subversion functionality out to a separate module which is packed with drd_server but can be enabled/disabled separately
+FIX #1499264 by @j.slemmer: improve the remote installation process
+FIX: Hide the "Extra Admin" block if there are no items inside of the block
+
+drd_server 7.x-2.0-rc2, 2012-02-18
+----------------------------------
+Fix #1422608: Changing the path in the install script
+
+drd_server 7.x-2.0-rc1, 2012-02-18
+----------------------------------
+NEW: Explicitly check for each request if the AES module is available and enabled
+CHANGE #1422608 by @checker: Rename drd_server.install.php to drd_server.install.php.txt and explain in README.TXT how to still allow remote installations
+CHANGE: Optimize code and combine request validation in one separate function
+FIX: Change the array definition for drd operations so that array_merge_deep() works properly
+FIX: Bring back the operation drd.server.domains as it otherwise wouldn't be known locally
+FIX: Santitise some function names as they haven't been save in terms of being unique
+FIX: Do not try to encrypt error messages for all relevant cases where encryption would fail anyway
+
+drd_server 7.x-2.0-beta3, 2012-01-22
+------------------------------------
+NEW: Heartbeat now also collects number and size of files, separated by temporary and permanent files
+NEW: New hooks to define extra form fields for server and domain settings on DRD which get stored back to variables on the remote servers and domains
+CHANGE: Move operation drd.server.domains to module drd
+CHANGE: Rename a operation category from server to domain
+FIX: Checking for updates on a server basis resets the date of previous check first to make sure we get real up-to-date information
+
+drd_server 7.x-2.0-beta2, 2012-01-08
+------------------------------------
+NEW: Reading available domains is now checking for the proper base_url in settings.php and also works with the default directory
+NEW: Operation drd.info now also provides Drupal version for the server database
+NEW: Add the refresh property to the drd.info operation
+NEW: Implement heartbeat information
+NEW: New DRD operation to set credentials (username and password) for the special user 1
+NEW: Allow to build sequences of operations to be executed, e.g. drd.info is collected right after cron or collecting update information
+IMPROVEMENT: Set the langcode globally so that every function in Drupal is making use of it and not just our own
+CHANGE: File system information moved from server to domain details
+CHANGE: Add all server info from drd.info to each of the domains as well to make sure the warning and error icon can be analyzed where it is displayed
+CHANGE: Make sure that updating translations is performed without a progressive batch run because that would cause a redirect which is not supported in XMLRPC
+CHANGE: Rewrite the "list update" operation and also implement a mode to fetch everything for the current server
+CHANGE: If update module ist not installed, ignore the operation drd.list.updates
+FIX: Operation drd.key wasn't returning any values
+FIX: Solve the problem with the wrong link to the config page when installing drd_server on a new server
+FIX: Resolve server domain recognition accepting simple redirects
+
+drd_server 7.x-2.0-beta1, 2012-01-01
+------------------------------------
+- NEW: Complete rewrite
+- NEW: Scan sites/directories if sites.php is not available
+- IMPROVEMENT: Combine determination of $sites into a central function drd_server_read_sites()
+- BUG: Change the database update functions so that db_prefixes are supported properly
